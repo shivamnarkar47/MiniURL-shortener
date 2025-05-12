@@ -1,12 +1,16 @@
-name: Ping MiniURL
+name: Ping MiniURL Service
 on:
   schedule:
-    - cron: '*/40 * * * * *' # Every 40 seconds
-  workflow_dispatch:
+    - cron: '*/1 * * * *'  # Every minute (minimum interval)
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - name: Ping service
-        run: curl -X GET https://miniurl-shortener.onrender.com/
+        run: |
+          # Ping immediately
+          curl -X GET https://miniurl-shortener-1.onrender.com
+          # Wait 40 seconds and ping again
+          sleep 40 && curl -X GET https://miniurl-shortener-1.onrender.com
