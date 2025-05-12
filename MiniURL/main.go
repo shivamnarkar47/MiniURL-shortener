@@ -51,6 +51,6 @@ if port == "" {
 }
 
 	fmt.Printf("Server is running on port %s \n", port)
-	log.Fatal(http.ListenAndServe(port, handler))
+  log.Fatal(http.ListenAndServe(("0.0.0.0:"+port), handler))
 
 }
