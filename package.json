@@ -1,0 +1,16 @@
+{
+  "name": "miniurl-shortener",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"cd miniurl-frontend/ && npm run dev\" \"cd MiniURL && go run main.go\"",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "concurrently": "^8.2.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
