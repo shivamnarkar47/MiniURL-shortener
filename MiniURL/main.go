@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+  "os"
 	"log"
 	"miniurl/handlers"
 	"miniurl/storage"
@@ -43,7 +44,12 @@ func main() {
 	})
 	handler := corsMiddleware(mux)
 
-	port := ":8080"
+	
+port := os.Getenv("PORT")
+if port == "" {
+    port = "8080"
+}
+
 	fmt.Printf("Server is running on port %s \n", port)
 	log.Fatal(http.ListenAndServe(port, handler))
 
