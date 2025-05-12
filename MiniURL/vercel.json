@@ -2,21 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "build.sh",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "."
-      }
-    },
-    {
-      "src": "miniurl",
-      "use": "@vercel/go"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "miniurl"
+      "src": "Dockerfile",
+      "use": "@vercel/docker"
     }
   ]
 }
