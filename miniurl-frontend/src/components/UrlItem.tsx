@@ -18,7 +18,7 @@ interface UrlItemProps {
 export function UrlItem({ url }: UrlItemProps) {
   const [isHovered, setIsHovered] = useState(false)
   const shortUrl = `${API_BASE_URL}/${url.short_code}`
-  const hostname = url.original_url ? new URL(url.original_url).hostname : ''
+  const hostname = url.original_url?.length ? new URL(url.original_url).hostname : ''
 
   return (
     <motion.div

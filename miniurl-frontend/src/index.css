@@ -277,8 +277,3 @@ input:-webkit-autofill:focus {
   box-shadow: 0 0 0 1000px var(--background) inset !important;
   caret-color: var(--foreground);
 }
-
-input:-webkit-autofill::first-line {
-  font-family: inherit;
-  font-size: inherit;
-}
