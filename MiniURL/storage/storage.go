@@ -4,8 +4,8 @@ package storage
 import (
 	"errors"
 	"miniurl/models"
+	"sort"
 	"sync"
-  "sort"
 )
 
 // Learn how is this implemented.
@@ -46,24 +46,44 @@ func (s *MemoryStorage) Find(shortCode string) (models.URL, error) {
 }
 
 func (s *MemoryStorage) GetRecent(limit int) ([]models.URL, error) {
-    s.mu.RLock()
-    defer s.mu.RUnlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
-    // Convert map to slice
-    urls := make([]models.URL, 0, len(s.urls))
-    for _, url := range s.urls {
-        urls = append(urls, url)
-    }
+	// Convert map to slice
+	urls := make([]models.URL, 0, len(s.urls))
+	for _, url := range s.urls {
+		urls = append(urls, url)
+	}
 
-    // Sort by creation time (newest first)
-    sort.Slice(urls, func(i, j int) bool {
-        return urls[i].CreatedAt.After(urls[j].CreatedAt)
-    })
+	// Sort by creation time (newest first)
+	sort.Slice(urls, func(i, j int) bool {
+		return urls[i].CreatedAt.After(urls[j].CreatedAt)
+	})
 
-    // Apply limit
-    if limit > 0 && limit < len(urls) {
-        urls = urls[:limit]
-    }
+	// Apply limit
+	if limit > 0 && limit < len(urls) {
+		urls = urls[:limit]
+	}
 
-    return urls, nil
+	return urls, nil
+}
+
+func (s *MemoryStorage) Delete(shortCode string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, exists := s.urls[shortCode]; !exists {
+		return errors.New("URL not found")
+	}
+
+	delete(s.urls, shortCode)
+	return nil
+}
+
+func (s *MemoryStorage) Clear() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.urls = make(map[string]models.URL)
+	return nil
 }

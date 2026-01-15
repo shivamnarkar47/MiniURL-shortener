@@ -2,11 +2,59 @@ import { useUrlShortener } from '../hooks/useUrlShortener'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Card } from './ui/card'
-import { Loader2, Link2, ArrowRight } from 'lucide-react'
+import { Loader2, Link2, ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useRef, useEffect } from 'react'
 import { API_BASE_URL } from '@/api/urlShortner'
 import { motion, AnimatePresence } from 'framer-motion'
+
+const showError = (title: string, description: string) => {
+  toast.custom((_id: string | number) => {
+    void _id
+    return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      className="bg-background border border-destructive/30 rounded-xl p-4 shadow-2xl backdrop-blur-lg max-w-md w-full"
+    >
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-full bg-destructive/10">
+          <XCircle className="h-5 w-5 text-destructive" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+        </div>
+      </div>
+    </motion.div>
+    )
+  }, { duration: 4000 })
+}
+
+const showSuccess = (title: string, description: React.ReactNode) => {
+  toast.custom((_id: string | number) => {
+    void _id
+    return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      className="bg-background border border-emerald-500/30 rounded-xl p-4 shadow-2xl backdrop-blur-lg max-w-md w-full"
+    >
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-full bg-emerald-500/10">
+          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          <div className="text-sm text-muted-foreground mt-1">{description}</div>
+        </div>
+      </div>
+    </motion.div>
+    )
+  }, { duration: 4000 })
+}
 
 export function ShortenForm() {
   const { shortenMutation } = useUrlShortener()
@@ -29,52 +77,37 @@ export function ShortenForm() {
     e.preventDefault()
     
     if (!url.trim()) {
-      toast("Error", {
-        description: 'Please enter a valid URL',
-        style: { background: 'oklch(0.577 0.245 27.325)', color: 'white' }
-      })
+      showError('Invalid URL', 'Please enter a valid URL to shorten')
       return
     }
 
     try {
       new URL(url)
     } catch {
-      toast("Error", {
-        description: 'Please enter a valid URL (include https://)',
-        style: { background: 'oklch(0.577 0.245 27.325)', color: 'white' }
-      })
+      showError('Invalid Format', 'URL must include a valid protocol (e.g., https://)')
       return
     }
 
     shortenMutation.mutate(url, {
       onSuccess: (data) => {
         setUrl('')
-        toast("Link Created!", {
-          description: (
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Link2 className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">Your shortened link:</span>
-                <a 
-                  href={`${API_BASE_URL}/${data.short_code}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline font-semibold"
-                >
-                  {data.short_code}
-                </a>
-              </div>
-            </div>
-          ),
-        })
+        showSuccess('Link Created!', (
+          <div className="flex flex-col gap-2">
+            <span>Your shortened link is ready:</span>
+            <a 
+              href={`${API_BASE_URL}/${data.short_code}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-emerald-500 font-semibold hover:underline"
+            >
+              <Link2 className="h-4 w-4" />
+              /{data.short_code}
+            </a>
+          </div>
+        ))
       },
       onError: () => {
-        toast('Error', {
-          description: 'Failed to shorten URL. Please try again.',
-          style: { background: 'oklch(0.577 0.245 27.325)', color: 'white' }
-        })
+        showError('Something went wrong', 'Failed to create short link. Please try again.')
       }
     })
   }

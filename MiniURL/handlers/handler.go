@@ -6,8 +6,8 @@ import (
 	"miniurl/models"
 	"miniurl/storage"
 	"net/http"
+	"strconv"
 	"strings"
-  "strconv"
 )
 
 type URLHandler struct {
@@ -99,25 +99,48 @@ const defaultRecentLimit = 10
 const maxRecentLimit = 100
 
 func (h *URLHandler) GetRecentURLs(w http.ResponseWriter, r *http.Request) {
-    // Get limit from query param with validation
-    limit := defaultRecentLimit
-    if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
-        if l, err := strconv.Atoi(limitParam); err == nil && l > 0 {
-            if l > maxRecentLimit {
-                l = maxRecentLimit
-            }
-            limit = l
-        }
-    }
+	// Get limit from query param with validation
+	limit := defaultRecentLimit
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if l, err := strconv.Atoi(limitParam); err == nil && l > 0 {
+			if l > maxRecentLimit {
+				l = maxRecentLimit
+			}
+			limit = l
+		}
+	}
 
-    urls, err := h.Storage.GetRecent(limit)
-    if err != nil {
-        http.Error(w, "Failed to fetch recent URLs", http.StatusInternalServerError)
-        return
-    }
+	urls, err := h.Storage.GetRecent(limit)
+	if err != nil {
+		http.Error(w, "Failed to fetch recent URLs", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(w).Encode(urls); err != nil {
-        http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-    }
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(urls); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+func (h *URLHandler) DeleteURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method Not Allowed, Use DELETE Request", http.StatusMethodNotAllowed)
+		return
+	}
+
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/url/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		h.respondWithError(w, "Short code is required", http.StatusBadRequest)
+		return
+	}
+
+	shortCode := parts[0]
+
+	if err := h.Storage.Delete(shortCode); err != nil {
+		h.respondWithError(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "URL deleted successfully"})
 }

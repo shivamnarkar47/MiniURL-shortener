@@ -20,3 +20,7 @@ export const getRecentUrls = async (): Promise<ShortenResponse[]> => {
   const response = await axios.get(`${API_BASE_URL}/recent`)
   return response.data
 }
+
+export const deleteUrl = async (shortCode: string): Promise<void> => {
+  await axios.delete(`${API_BASE_URL}/url/${shortCode}`)
+}

@@ -1,4 +1,4 @@
-import { getRecentUrls, shortenUrl, type ShortenResponse } from "@/api/urlShortner"
+import { deleteUrl, getRecentUrls, shortenUrl, type ShortenResponse } from "@/api/urlShortner"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 
@@ -12,6 +12,13 @@ export const useUrlShortener = () => {
     }
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteUrl,
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey:['recent-urls']})
+    }
+  })
+
   const recentUrlsQuery = useQuery<ShortenResponse[]>({
     queryKey:['recent-urls'],
     queryFn: getRecentUrls
@@ -20,6 +27,7 @@ export const useUrlShortener = () => {
 
   return {
     shortenMutation,
+    deleteMutation,
     recentUrlsQuery
   }
 }

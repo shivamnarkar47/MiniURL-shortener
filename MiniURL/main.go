@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-  "os"
 	"log"
 	"miniurl/handlers"
 	"miniurl/storage"
 	"net/http"
+	"os"
 )
+
 // corsMiddleware adds CORS headers to each response
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,7 @@ func main() {
 	urlHandler := &handlers.URLHandler{
 		Storage: storage,
 	}
-  mux := http.NewServeMux()
+	mux := http.NewServeMux()
 	mux.HandleFunc("/shorten", func(w http.ResponseWriter, r *http.Request) {
 		urlHandler.ShortenURL(w, r)
 	})
@@ -42,15 +43,17 @@ func main() {
 	mux.HandleFunc("/recent", func(w http.ResponseWriter, r *http.Request) {
 		urlHandler.GetRecentURLs(w, r)
 	})
+	mux.HandleFunc("/url/", func(w http.ResponseWriter, r *http.Request) {
+		urlHandler.DeleteURL(w, r)
+	})
 	handler := corsMiddleware(mux)
 
-	
-port := os.Getenv("PORT")
-if port == "" {
-    port = "8080"
-}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
 	fmt.Printf("Server is running on port %s \n", port)
-  log.Fatal(http.ListenAndServe(("0.0.0.0:"+port), handler))
+	log.Fatal(http.ListenAndServe(("0.0.0.0:" + port), handler))
 
 }

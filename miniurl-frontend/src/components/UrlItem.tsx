@@ -2,10 +2,56 @@ import { Card } from './ui/card'
 import { formatDate } from '../lib/utils'
 import { CopyButton } from './CopyButton'
 import { Button } from './ui/button'
-import { ExternalLink, Calendar, Globe } from 'lucide-react'
+import { ExternalLink, Calendar, Globe, Trash2, CheckCircle2, XCircle } from 'lucide-react'
 import { API_BASE_URL } from '@/api/urlShortner'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { useUrlShortener } from '../hooks/useUrlShortener'
+import { toast } from 'sonner'
+
+const showDeleteSuccess = (shortCode: string) => {
+  toast.custom((_id: string | number) => {
+    void _id
+    return (
+    <motion.div
+      initial={{ opacity: 0, x: -20, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+      className="bg-background border border-emerald-500/30 rounded-xl p-4 shadow-2xl backdrop-blur-lg flex items-center gap-3"
+    >
+      <div className="p-2 rounded-full bg-emerald-500/10">
+        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+      </div>
+      <div>
+        <h3 className="font-semibold text-foreground">Link Removed</h3>
+        <p className="text-sm text-muted-foreground">/{shortCode} has been deleted</p>
+      </div>
+    </motion.div>
+    )
+  }, { duration: 3000 })
+}
+
+const showDeleteError = () => {
+  toast.custom((_id: string | number) => {
+    void _id
+    return (
+    <motion.div
+      initial={{ opacity: 0, x: -20, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 20, scale: 0.95 }}
+      className="bg-background border border-destructive/30 rounded-xl p-4 shadow-2xl backdrop-blur-lg flex items-center gap-3"
+    >
+      <div className="p-2 rounded-full bg-destructive/10">
+        <XCircle className="h-5 w-5 text-destructive" />
+      </div>
+      <div>
+        <h3 className="font-semibold text-foreground">Delete Failed</h3>
+        <p className="text-sm text-muted-foreground">Could not remove the link. Please try again.</p>
+      </div>
+    </motion.div>
+    )
+  }, { duration: 4000 })
+}
 
 interface UrlItemProps {
   url: {
@@ -17,8 +63,23 @@ interface UrlItemProps {
 
 export function UrlItem({ url }: UrlItemProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const { deleteMutation } = useUrlShortener()
   const shortUrl = `${API_BASE_URL}/${url.short_code}`
   const hostname = url.original_url?.length ? new URL(url.original_url).hostname : ''
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    deleteMutation.mutate(url.short_code, {
+      onSuccess: () => {
+        showDeleteSuccess(url.short_code)
+      },
+      onError: () => {
+        showDeleteError()
+      }
+    })
+  }
 
   return (
     <motion.div
@@ -30,6 +91,7 @@ export function UrlItem({ url }: UrlItemProps) {
         className={`
           relative overflow-hidden transition-all duration-300
           ${isHovered ? 'border-primary/30 shadow-lg shadow-primary/5' : 'border-border/50'}
+          ${deleteMutation.isPending && deleteMutation.variables === url.short_code ? 'opacity-50' : ''}
         `}
       >
         <motion.div
@@ -43,7 +105,7 @@ export function UrlItem({ url }: UrlItemProps) {
         <div className="relative p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <motion.a
                   href={shortUrl}
                   target="_blank"
@@ -87,22 +149,39 @@ export function UrlItem({ url }: UrlItemProps) {
               )}
             </div>
             
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-                className="shrink-0 sm:self-start"
+            <div className="flex items-center gap-2">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <a href={shortUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Visit
-                </a>
-              </Button>
-            </motion.div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={deleteMutation.isPending}
+                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </motion.div>
+              
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                  className="shrink-0 sm:self-start"
+                >
+                  <a href={shortUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Visit
+                  </a>
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
         
