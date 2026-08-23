@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "commonjs",
     "types": ["bun"],
     "strict": true,
     "skipLibCheck": true,

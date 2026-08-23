@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
-import { createApp } from '../src/app'
+import { createApp } from '../src/create-app'
 import { MemoryStorage } from '../src/storage/memory'
 
 const shorten = (body: Record<string, unknown> | string) =>

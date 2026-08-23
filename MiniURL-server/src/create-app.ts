@@ -82,6 +82,8 @@ export function createApp(storage: Storage) {
     return c.json({ message: 'URL deleted successfully' })
   })
 
+  app.get('/_health', (c) => c.json({ status: 'ok' }))
+
   app.get('/', (c) => c.json({ error: 'Short code is required' }, 400))
 
   app.get('/:code', async (c) => {
