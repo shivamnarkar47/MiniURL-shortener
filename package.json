@@ -3,8 +3,9 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"cd miniurl-frontend/ && npm run dev\" \"cd MiniURL && go run main.go\"",
-    "start": "npm run dev"
+    "dev": "concurrently \"cd miniurl-frontend/ && bun run dev\" \"cd MiniURL-server && bun run dev\"",
+    "start": "bun run dev",
+    "backend:test": "cd MiniURL-server && bun test"
   },
   "devDependencies": {
     "@types/bun": "latest",

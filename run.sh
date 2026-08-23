@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKEND_DIR="$SCRIPT_DIR/MiniURL"
+BACKEND_DIR="$SCRIPT_DIR/MiniURL-server"
 FRONTEND_DIR="$SCRIPT_DIR/miniurl-frontend"
 
 RED='\033[0;31m'
@@ -35,25 +35,16 @@ header() {
 check_prerequisites() {
     log "Checking prerequisites..."
 
-    if ! command -v go &> /dev/null; then
-        warn "Go not found. Backend will not be available."
+    if ! command -v bun &> /dev/null; then
+        warn "Bun not found. Backend and frontend will not be available."
         BACKEND_AVAILABLE=false
+        FRONTEND_AVAILABLE=false
+        error "Bun is not installed. Please install it first."
+        exit 1
     else
         BACKEND_AVAILABLE=true
-        log "Go found: $(go version)"
-    fi
-
-    if ! command -v bun &> /dev/null; then
-        warn "Bun not found. Frontend will not be available."
-        FRONTEND_AVAILABLE=false
-    else
         FRONTEND_AVAILABLE=true
         log "Bun found: $(bun --version)"
-    fi
-
-    if [ "$BACKEND_AVAILABLE" = false ] && [ "$FRONTEND_AVAILABLE" = false ]; then
-        error "Neither Go nor Bun is installed. Please install at least one."
-        exit 1
     fi
 }
 
@@ -63,27 +54,25 @@ start_backend() {
         return
     fi
 
-    header "Starting Backend (Go)"
+    header "Starting Backend (Bun + Hono)"
 
-    if [ ! -f "$BACKEND_DIR/go.mod" ]; then
-        warn "Backend directory not found or missing go.mod"
+    if [ ! -f "$BACKEND_DIR/package.json" ]; then
+        warn "Backend directory not found or missing package.json"
         return
     fi
 
     cd "$BACKEND_DIR"
 
-    log "Building backend..."
-    go build -o miniurl-server main.go 2>/dev/null || true
-
-    if [ -f "miniurl-server" ]; then
-        log "Starting backend server on http://localhost:8080"
-        PORT=8080 ./miniurl-server &
-        BACKEND_PID=$!
-        echo $BACKEND_PID > /tmp/miniurl-backend.pid
-        log "Backend started with PID: $BACKEND_PID"
-    else
-        warn "Failed to build backend"
+    if [ ! -d "node_modules" ]; then
+        warn "Backend dependencies not installed, installing..."
+        bun install
     fi
+
+    log "Starting backend server on http://localhost:8080"
+    PORT=8080 bun run src/index.ts &
+    BACKEND_PID=$!
+    echo $BACKEND_PID > /tmp/miniurl-backend.pid
+    log "Backend started with PID: $BACKEND_PID"
 }
 
 start_frontend() {
@@ -129,7 +118,7 @@ stop_services() {
         rm /tmp/miniurl-frontend.pid
     fi
 
-    pkill -f "miniurl-server" 2>/dev/null || true
+    pkill -f "MiniURL-server/src/index.ts" 2>/dev/null || true
     pkill -f "vite" 2>/dev/null || true
 
     log "All services stopped"
@@ -149,7 +138,7 @@ status() {
             echo -e "  ${RED}●${NC} Backend  - Stale PID file"
         fi
     else
-        if pgrep -f "miniurl-server" > /dev/null; then
+            if pgrep -f "MiniURL-server/src/index.ts" > /dev/null; then
             echo -e "  ${GREEN}●${NC} Backend  - Running"
             running=true
         else
@@ -208,10 +197,9 @@ install_dependencies() {
     header "Installing Dependencies"
 
     if [ "$BACKEND_AVAILABLE" = true ]; then
-        log "Installing Go dependencies..."
+        log "Installing backend dependencies..."
         cd "$BACKEND_DIR"
-        go mod download 2>/dev/null || true
-        go mod tidy 2>/dev/null || true
+        bun install
     fi
 
     if [ "$FRONTEND_AVAILABLE" = true ]; then

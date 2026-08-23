@@ -1,6 +1,6 @@
 # MiniURL
 
-A modern, sleek URL shortener built with Go and React, featuring a beautiful UI with smooth animations inspired by award-winning web design.
+A modern, sleek URL shortener built with Bun + Hono and React, featuring a beautiful UI with smooth animations inspired by award-winning web design.
 
 ![MiniURL Screenshot](https://via.placeholder.com/1200x630/1a1a2e/iniURL+-+ffffff?text=MModern+URL+Shortener)
 
@@ -18,9 +18,9 @@ A modern, sleek URL shortener built with Go and React, featuring a beautiful UI 
 ## Tech Stack
 
 ### Backend
-- **Go** - Fast, statically typed compiled language
-- **Standard Library** - HTTP server without external frameworks
-- **In-Memory Storage** - Thread-safe concurrent storage with RWMutex
+- **Bun** - Fast all-in-one JavaScript runtime and toolkit
+- **Hono** - Ultrafast web framework
+- **In-Memory Storage** - Storage behind a clean interface, ready for a DB swap
 
 ### Frontend
 - **React 19** - Modern UI library with concurrent features
@@ -36,8 +36,7 @@ A modern, sleek URL shortener built with Go and React, featuring a beautiful UI 
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) >= 1.0 (for frontend)
-- [Go](https://go.dev) >= 1.20 (for backend)
+- [Bun](https://bun.sh) >= 1.0
 
 ### Installation
 
@@ -55,8 +54,9 @@ bun install
 
 3. Start the backend server:
 ```bash
-cd MiniURL
-go run main.go
+cd MiniURL-server
+bun install
+bun run dev
 ```
 
 4. In a new terminal, start the frontend development server:
@@ -71,17 +71,22 @@ bun run dev
 
 ```
 MiniURL-shortener/
-├── MiniURL/                    # Go backend
-│   ├── main.go                # Application entry point & CORS middleware
-│   ├── handlers/
-│   │   └── handler.go         # HTTP handlers for URL operations
-│   ├── models/
-│   │   └── models.go          # Data models
-│   ├── storage/
-│   │   └── storage.go         # In-memory storage implementation
-│   ├── vercel.json            # Vercel deployment config
-│   ├── go.mod                 # Go module definition
-│   └── Dockerfile             # Container configuration
+├── MiniURL-server/              # Bun + Hono backend
+│   ├── src/
+│   │   ├── index.ts             # Dev server entry (@hono/node-server)
+│   │   ├── app.ts               # Hono app: routes, CORS, error handling
+│   │   ├── handlers/            # HTTP handlers for URL operations
+│   │   ├── lib/
+│   │   │   ├── shortCode.ts     # Crypto-random short code generation
+│   │   │   └── validate.ts      # Input validation helpers
+│   │   └── storage/
+│   │       ├── types.ts         # Storage interface (swap in a DB here later)
+│   │       └── memory.ts        # In-memory storage implementation
+│   ├── api/
+│   │   └── index.ts             # Vercel serverless entry
+│   ├── test/                    # Bun test suite
+│   ├── vercel.json              # Vercel deployment config
+│   └── package.json
 │
 ├── miniurl-frontend/           # React frontend
 │   ├── src/
@@ -173,7 +178,7 @@ Retrieve recently created URLs.
 
 Redirect to the original URL.
 
-**Response:** HTTP 301 redirect to the original URL.
+**Response:** HTTP 302 redirect to the original URL.
 
 ## Configuration
 
@@ -206,22 +211,15 @@ The built files will be in the `dist/` directory.
 ### Backend
 
 ```bash
-cd MiniURL
-go build -o miniurl-server main.go
+cd MiniURL-server
+bun test   # run the test suite
 ```
 
 ## Deployment
 
-### Docker
-
-```bash
-cd MiniURL
-docker build -t miniurl-backend .
-docker run -p 8080:8080 miniurl-backend
-```
-
 ### Vercel
 
+The backend deploys as a serverless function via `MiniURL-server/vercel.json` (Bun runtime).
 The frontend can be deployed to Vercel with zero configuration.
 
 ### Environment Variables in Production
