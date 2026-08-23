@@ -1,7 +1,5 @@
 import { useState } from "react"
-import { Button } from "./ui/button"
 import { Check, Copy } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 
 interface CopyButtonProps {
   text: string
@@ -17,40 +15,17 @@ export function CopyButton({ text }: CopyButtonProps) {
   }
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label="Copy short link"
+      className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
     >
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleCopy}
-        className="h-8 w-8 p-0 hover:bg-primary/10 transition-colors"
-      >
-        <AnimatePresence mode="wait">
-          {copied ? (
-            <motion.div
-              key="check"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 180 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            >
-              <Check className="h-4 w-4 text-emerald-500" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="copy"
-              initial={{ scale: 0, rotate: 180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: -180 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            >
-              <Copy className="h-4 w-4 text-muted-foreground" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Button>
-    </motion.div>
+      {copied ? (
+        <Check className="h-3.5 w-3.5 text-primary" />
+      ) : (
+        <Copy className="h-3.5 w-3.5" />
+      )}
+    </button>
   )
 }
